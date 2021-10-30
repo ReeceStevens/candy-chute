@@ -16,7 +16,7 @@ install:
 build: $(OUT_DIR)/$(SKETCH_FILE).hex
 
 flash: $(OUT_DIR)/$(SKETCH_FILE).hex
-	arduino-cli upload -p /dev/ttyACM0 --input-dir $(OUT_DIR) -b adafruit:nrf52:feather52840 ./$(SKETCH_FILE)
+	arduino-cli upload -p $(SERIAL_PORT) --input-dir $(OUT_DIR) -b adafruit:nrf52:feather52840 ./$(SKETCH_FILE)
 
 clean:
 	rm target/*
