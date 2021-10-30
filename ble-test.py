@@ -1,43 +1,46 @@
+import sys
+import asyncio
+import logging
+
 from playsound import playsound
-from bluepy import btle, scanner
+from bleak import BleakClient, BleakScanner, discover
+
+logger = logging.getLogger(__name__)
 
 AUDIO_FILE = ""
 
-class MyDelegate(btle.DefaultDelegate):
-    def __init__(self, params):
-        btle.DefaultDelegate.__init__(self)
+async def run_ble_client(name: str):
+    async def callback_handler(sender, data):
+        print("Data received: {}".format(data))
 
-    def handleNotification(self, cHandle, data):
-        print("Notification received")
-        playsound(AUDIO_FILE)
+    def filter_func(d, ad):
+        print(d.name)
+        return d.name and d.name.lower() == name.lower()
+
+    devices = await discover()
+    print(devices)
+
+    device = await BleakScanner.find_device_by_filter(filter_func)
+    print(device)
+
+    async with BleakClient(device.address) as client:
+        logger.info(f"Connected: {client.is_connected}")
+        print(await client.get_services())
+
+        # await client.start_notify(char_uuid, callback_handler)
+        # await asyncio.sleep(10.0)
+        # await client.stop_notify(char_uuid)
 
 
-peripheral_name = "candy-chute-client"
 
-scanner = scanner.Scanner()
-devices = scanner.scan(timeout=3)
-print([d.getValueText(9) for d in scanner.getDevices()])
+async def main(name: str):
+    await run_ble_client(name)
 
-peripheral = None
-for device in scanner.getDevices():
-    if device.getValueText(9) == peripheral_name:
-        peripheral = device
-
-
-per = btle.Peripheral(peripheral.addr, peripheral.addrType)
-per.setDelegate( MyDelegate(None) )
-
-service_name = '00001523-1212-efde-1523-785feabcd123'
-service = None
-for s in per.getServices():
-    if s.uuid.getCommonName() == service_name:
-        service = s
-ch = service.getCharacteristics()[0]
-print(ch.valHandle)
-per.writeCharacteristic(ch.valHandle+1, b"\x01\x00")
-
-while True:
-    if per.waitForNotifications(1.0):
-        continue
-
-    print("Waiting...")
+if __name__ == '__main__':
+   logging.basicConfig(level=logging.INFO)
+   asyncio.run(
+        main(
+            sys.argv[1] if len(sys.argv) > 1 else ADDRESS,
+            # sys.argv[2] if len(sys.argv) > 2 else CHARACTERISTIC_UUID,
+        )
+   )

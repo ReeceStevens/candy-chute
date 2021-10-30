@@ -1,0 +1,6 @@
+bleak==0.13.0
+playsound==1.3.0
+pyobjc-core==7.3
+pyobjc-framework-Cocoa==7.3
+pyobjc-framework-CoreBluetooth==7.3
+pyobjc-framework-libdispatch==7.3
